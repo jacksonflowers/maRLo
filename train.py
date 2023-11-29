@@ -44,7 +44,7 @@ def main():
 
     vec_env = SubprocVecEnv([make_env(args, i) for i in range(args.num_cpu)])
 
-    save_freq = args.num_cpu * 2048 * max(args.total_grad_updates // 10, 1)
+    save_freq = 2048 * max(args.total_grad_updates // 10, 1)
     checkpoint_callback = CheckpointCallback(
         save_freq=save_freq,
         save_path="./logs/",
