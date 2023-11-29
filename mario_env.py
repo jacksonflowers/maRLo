@@ -5,9 +5,9 @@ from pyboy.botsupport.constants import TILES
 import numpy as np
 
 # TODO:
-# Frame skipping?
-# Evaluation callback
-# Custom video recorder? Right now it's writing 16x videos unnecessarily. But won't need video recorder for real training.
+# skip frames is not implemented well (observations are also skip_frames frames apart)
+# continue from checkpoint
+# monitoring
 
 class MarioEnv(Env):
     def __init__(self, args):
@@ -17,7 +17,7 @@ class MarioEnv(Env):
         self.pyboy = PyBoy(args.gb_path, game_wrapper=True, window_type='headless')
         assert self.pyboy.cartridge_title() == 'SUPER MARIOLAN'
 
-        self.skip_frames = 4
+        self.skip_frames = 2
 
         self.game_wrapper = self.pyboy.game_wrapper()
         self.last_fitness = self.compute_fitness()
@@ -117,7 +117,10 @@ class MarioEnv(Env):
         observation = self._get_observation()
         done = pyboy_done or self.game_wrapper.game_over()
 
-        return observation, reward, False, done, {'final_fitness': final_fitness}
+        world = self.game_wrapper.world
+        level_progress = self.game_wrapper.level_progress
+
+        return observation, reward, False, done, {'final_fitness': final_fitness, 'world': world, 'level_progress': level_progress}
     
     def reset(self, seed=None, options=None):
         final_fitness = self.last_fitness
@@ -137,4 +140,5 @@ class MarioEnv(Env):
         self.pyboy.stop(save=False)
 
     def compute_fitness(self):
-        return self.game_wrapper.lives_left * 100 + self.game_wrapper.level_progress
+        return self.game_wrapper.lives_left * 20 + sum(self.game_wrapper.world) * 50 + self.game_wrapper.level_progress + self.game_wrapper.time_left
+        # return self.game_wrapper.fitness
