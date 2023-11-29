@@ -29,13 +29,14 @@ def custom_post_tick(self):
 
     if self.game_has_started:
         self._level_progress_max = max(self.level_progress, self._level_progress_max)
-        end_score = self.score + self.time_left * 10
-        self.fitness = (
-            self.lives_left * 10000 + end_score + self._level_progress_max * 10
-        )
+        # end_score = self.score + self.time_left * 10
+        self.fitness = self.lives_left * 100 + self._level_progress_max
 
 
 class CustomGameWrapper(GameWrapperSuperMarioLand):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def post_tick(self):
         super().post_tick()
         if self.game_has_started:
@@ -44,7 +45,12 @@ class CustomGameWrapper(GameWrapperSuperMarioLand):
             self._level_progress_max = max(
                 self.level_progress, self._level_progress_max
             )
-            end_score = self.score + self.time_left * 10
-            self.fitness = (
-                self.lives_left * 10000 + end_score + self._level_progress_max * 10
-            )
+            # end_score = self.score + self.time_left * 10
+            self.fitness = self.lives_left * 100 + self._level_progress_max
+
+
+class CustomFitness():
+    def __init__(self, game_wrapper):
+        self.game_wrapper = game_wrapper
+
+    
