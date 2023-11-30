@@ -6,8 +6,8 @@ import numpy as np
 
 # TODO:
 # skip frames is not implemented well (observations are also skip_frames frames apart)
-# continue from checkpoint
-# monitoring
+# continue training from checkpoint - need to change logging in this case
+# need to optimize hyperparams (lr scheduler, etc)
 
 class MarioEnv(Env):
     def __init__(self, args):
@@ -17,7 +17,7 @@ class MarioEnv(Env):
         self.pyboy = PyBoy(args.gb_path, game_wrapper=True, window_type='headless')
         assert self.pyboy.cartridge_title() == 'SUPER MARIOLAN'
 
-        self.skip_frames = 2
+        self.skip_frames = 4
 
         self.game_wrapper = self.pyboy.game_wrapper()
         self.last_fitness = self.compute_fitness()
@@ -140,5 +140,6 @@ class MarioEnv(Env):
         self.pyboy.stop(save=False)
 
     def compute_fitness(self):
-        return self.game_wrapper.lives_left * 20 + sum(self.game_wrapper.world) * 50 + self.game_wrapper.level_progress + self.game_wrapper.time_left
+        return self.game_wrapper.lives_left * 20 + sum(self.game_wrapper.world) * 5000 + self.game_wrapper.level_progress + self.game_wrapper.time_left
         # return self.game_wrapper.fitness
+        # return self.game_wrapper.lives_left * 20 + sum(self.game_wrapper.world) * 50 + self.game_wrapper._level_progress_max + self.game_wrapper.time_left

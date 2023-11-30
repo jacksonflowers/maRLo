@@ -18,7 +18,9 @@ def capped_cubic_video_schedule(episode_id: int) -> bool:
     Returns:
         If to apply a video schedule number
     """
-    if episode_id < 1000:
+    if episode_id < 2:
+        return False
+    elif episode_id < 1000:
         return int(round(episode_id ** (1.0 / 3))) ** 3 == episode_id
     else:
         return episode_id % 1000 == 0
