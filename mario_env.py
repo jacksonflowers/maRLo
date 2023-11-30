@@ -5,9 +5,11 @@ from pyboy.botsupport.constants import TILES
 import numpy as np
 
 # TODO:
-# skip frames is not implemented well (observations are also skip_frames frames apart)
+# obvious optimization: chop off top part of screen
+# skip frames is not necessarily the best (observations are also skip_frames frames apart)
 # continue training from checkpoint - need to change logging in this case
-# need to optimize hyperparams (lr scheduler, etc)
+# need to optimize hyperparams (lr scheduler, etc), probably use tensorboard or some other vis tool for learning curves
+# testing script to get best videos of runs
 
 class MarioEnv(Env):
     def __init__(self, args):
