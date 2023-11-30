@@ -18,11 +18,11 @@ def make_env(args, rank, seed=0):
     def _init():
         env = MarioEnv(args)
         env = GrayScaleObservation(env)
-        env = ResizeObservation(env, (72, 80))
+        env = ResizeObservation(env, (64, 80))
         env = CustomFrameStack(env, 4)
-        env = TimeLimit(env, 8192)
-        env = CustomRecordVideo(env, video_folder='videos')
-        env = CustomMonitor(env, 'logs')
+        env = TimeLimit(env, 2048)
+        env = CustomRecordVideo(env, video_folder='videos', name_prefix=args.model)
+        env = CustomMonitor(env, 'logs', args.model)
         env.reset()
         return env
     
@@ -48,14 +48,14 @@ def main():
     checkpoint_callback = CheckpointCallback(
         save_freq=save_freq,
         save_path="./logs/",
-        name_prefix="mario",
+        name_prefix=args.model,
     )
 
     if args.model == 'ppo':
-        model = PPO('CnnPolicy', env=vec_env, verbose=1, n_epochs=3, batch_size=256, n_steps=4096, learning_rate=0.0002, vf_coef=1, ent_coef=0.01)
+        model = PPO('CnnPolicy', env=vec_env, verbose=1, n_epochs=3, learning_rate=0.0002, vf_coef=1, ent_coef=0.01)
     elif args.model == 'dqn':
         model = DQN('CnnPolicy', env=vec_env, verbose=1)
-    model.learn(total_timesteps=args.num_cpu * 4096 * args.total_grad_updates, progress_bar=True, callback=checkpoint_callback)
+    model.learn(total_timesteps=args.num_cpu * 2048 * args.total_grad_updates, progress_bar=True, callback=checkpoint_callback)
 
     model.save(f'{args.model}_mario')
 

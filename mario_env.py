@@ -5,10 +5,9 @@ from pyboy.botsupport.constants import TILES
 import numpy as np
 
 # TODO:
-# obvious optimization: chop off top part of screen
-# skip frames is not necessarily the best (observations are also skip_frames frames apart)
 # continue training from checkpoint - need to change logging in this case
-# need to optimize hyperparams (lr scheduler, etc), probably use tensorboard or some other vis tool for learning curves
+# need to optimize hyperparams (lr scheduler, etc), use tensorboard? COULD probably reimplement video and monitoring/logging using https://stable-baselines3.readthedocs.io/en/master/guide/tensorboard.html
+# skip frames is not necessarily the best (observations are also skip_frames frames apart)
 # testing script to get best videos of runs
 
 class MarioEnv(Env):
@@ -54,7 +53,7 @@ class MarioEnv(Env):
         self.action_space = Discrete(len(self.actions))
 
         if args.observation_type == "raw":
-            screen = np.asarray(self.pyboy.botsupport_manager().screen().screen_ndarray())  # (144, 160, 3)
+            screen = np.asarray(self.pyboy.botsupport_manager().screen().screen_ndarray())[16:,:,:]  # (144, 160, 3) -> (128, 160, 3)
             self.observation_space = Box(low=0, high=255, shape=screen.shape, dtype=np.uint8)
         elif args.observation_type in ["tiles", "compressed", "minimal"]:
             size_ids = TILES
@@ -83,7 +82,7 @@ class MarioEnv(Env):
         
     def _get_observation(self):
         if self.observation_type == "raw":
-            observation = np.asarray(self.pyboy.botsupport_manager().screen().screen_ndarray(), dtype=np.uint8)
+            observation = np.asarray(self.pyboy.botsupport_manager().screen().screen_ndarray(), dtype=np.uint8)[16:,:,:]
         elif self.observation_type in ["tiles", "compressed", "minimal"]:
             observation = self.game_wrapper._game_area_np(self.observation_type)
         else:
