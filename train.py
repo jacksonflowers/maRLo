@@ -42,7 +42,7 @@ def main():
     parser.add_argument('--action_space', type=str, default='all')
     parser.add_argument('--skip_frames', type=int, default=2)
     parser.add_argument('--model', type=str, default='ppo', choices=['ppo', 'dqn'])
-    parser.add_argument('--checkpoint', type=bool, action='store_true')
+    parser.add_argument('--checkpoint', action='store_true')
 
     args = parser.parse_args()
     print(args)
@@ -67,7 +67,11 @@ def main():
         model = PPO('CnnPolicy', env=vec_env, verbose=1, n_epochs=3, batch_size=256, n_steps=4096, learning_rate=0.0002, vf_coef=1, ent_coef=0.01, policy_kwargs=policy_kwargs)
     elif args.model == 'dqn':
         model = DQN('CnnPolicy', env=vec_env, verbose=1, policy_kwargs=policy_kwargs)
-    model.learn(total_timesteps=args.num_cpu * 4096 * args.total_grad_updates, progress_bar=True, callback=checkpoint_callback)
+    
+    if args.checkpoint:
+        model.learn(total_timesteps=args.num_cpu * 4096 * args.total_grad_updates, progress_bar=True, callback=checkpoint_callback)
+    else:
+        model.learn(total_timesteps=args.num_cpu * 4096 * args.total_grad_updates, progress_bar=True)
 
     model.save(f'{args.model}_{args.skip_frames}_{args.observation_type}_{args.action_space}')
 
@@ -76,4 +80,6 @@ if __name__ == '__main__':
 
 
 # wall clock
-# ppo_2_raw_all: 50min
+# ppo_2_raw_all: 1hr
+# ppo_2_compressed_all: 50min
+# ppo_4_raw_all: 1hr 10min
