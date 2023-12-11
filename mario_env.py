@@ -6,6 +6,7 @@ import numpy as np
 
 # TODO:
 # continue training from checkpoint - need to change logging in this case
+# log the time also
 # need to optimize hyperparams (lr scheduler, etc), use tensorboard? COULD probably reimplement video and monitoring/logging using https://stable-baselines3.readthedocs.io/en/master/guide/tensorboard.html
 # skip frames is not necessarily the best (observations are also skip_frames frames apart)
 # testing script to get best videos of runs
@@ -18,28 +19,30 @@ class MarioEnv(Env):
         self.pyboy = PyBoy(args.gb_path, game_wrapper=True, window_type='headless')
         assert self.pyboy.cartridge_title() == 'SUPER MARIOLAN'
 
-        self.skip_frames = 4
+        self.skip_frames = args.skip_frames
 
         self.game_wrapper = self.pyboy.game_wrapper()
         self.last_fitness = self.compute_fitness()
 
         self._DO_NOTHING = WindowEvent.PASS
-        self._buttons = [
-            WindowEvent.PRESS_ARROW_UP, WindowEvent.PRESS_ARROW_DOWN, WindowEvent.PRESS_ARROW_RIGHT,
-            WindowEvent.PRESS_ARROW_LEFT, WindowEvent.PRESS_BUTTON_A,
-        ]
-        # self._buttons = [
-        #     WindowEvent.PRESS_ARROW_UP, WindowEvent.PRESS_ARROW_RIGHT, WindowEvent.PRESS_BUTTON_A,
-        # ]
-        self._button_is_pressed = {button: False for button in self._buttons}
 
-        self._buttons_release = [
-            WindowEvent.RELEASE_ARROW_UP, WindowEvent.RELEASE_ARROW_DOWN, WindowEvent.RELEASE_ARROW_RIGHT,
-            WindowEvent.RELEASE_ARROW_LEFT, WindowEvent.RELEASE_BUTTON_A,
-        ]
-        # self._buttons_release = [
-        #     WindowEvent.RELEASE_ARROW_UP, WindowEvent.RELEASE_ARROW_RIGHT, WindowEvent.RELEASE_BUTTON_A,
-        # ]
+        if args.action_space == 'all':
+            self._buttons = [
+                WindowEvent.PRESS_ARROW_UP, WindowEvent.PRESS_ARROW_DOWN, WindowEvent.PRESS_ARROW_RIGHT,
+                WindowEvent.PRESS_ARROW_LEFT, WindowEvent.PRESS_BUTTON_A,
+            ]
+            self._buttons_release = [
+                WindowEvent.RELEASE_ARROW_UP, WindowEvent.RELEASE_ARROW_DOWN, WindowEvent.RELEASE_ARROW_RIGHT,
+                WindowEvent.RELEASE_ARROW_LEFT, WindowEvent.RELEASE_BUTTON_A,
+            ]
+        elif args.action_space == 'less':
+            self._buttons = [
+                WindowEvent.PRESS_ARROW_RIGHT, WindowEvent.PRESS_BUTTON_A,
+            ]
+            self._buttons_release = [
+                WindowEvent.RELEASE_ARROW_RIGHT, WindowEvent.RELEASE_BUTTON_A,
+            ]
+        self._button_is_pressed = {button: False for button in self._buttons}
         self._release_button = {button: r_button for button, r_button in zip(self._buttons, self._buttons_release)}
 
         self.actions = [self._DO_NOTHING] + self._buttons
@@ -48,7 +51,6 @@ class MarioEnv(Env):
         elif args.action_type not in ["press", "toggle"]:
             raise ValueError(f"action_type {args.action_type} is invalid")
         self.action_type = args.action_type
-        # simultaneous actions?
 
         self.action_space = Discrete(len(self.actions))
 
@@ -73,7 +75,8 @@ class MarioEnv(Env):
                     )
             # nvec = size_ids * np.ones(self.game_wrapper.shape)
             # self.observation_space = MultiDiscrete(nvec)
-            self.observation_space = Box(low=0, high=255, shape=self.game_wrapper.shape, dtype=np.uint8)
+            swap_shape = (self.game_wrapper.shape[1], self.game_wrapper.shape[0])
+            self.observation_space = Box(low=0, high=size_ids, shape=swap_shape, dtype=np.uint8)
         else:
             raise NotImplementedError(f"observation_type {args.observation_type} is invalid")
         self.observation_type = args.observation_type
