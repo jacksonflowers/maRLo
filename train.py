@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 from pyboy import PyBoy
 from mario_env import MarioEnv
-from stable_baselines3 import PPO, DQN
+from stable_baselines3 import PPO, DQN, A2C
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.utils import set_random_seed
@@ -41,7 +41,7 @@ def main():
     parser.add_argument('--action_type', type=str, default='toggle')
     parser.add_argument('--action_space', type=str, default='all')
     parser.add_argument('--skip_frames', type=int, default=2)
-    parser.add_argument('--model', type=str, default='ppo', choices=['ppo', 'dqn'])
+    parser.add_argument('--model', type=str, default='ppo', choices=['ppo', 'dqn', 'a2c'])
     parser.add_argument('--checkpoint', action='store_true')
 
     args = parser.parse_args()
@@ -66,7 +66,11 @@ def main():
     if args.model == 'ppo':
         model = PPO('CnnPolicy', env=vec_env, verbose=1, n_epochs=3, batch_size=256, n_steps=4096, learning_rate=0.0002, vf_coef=1, ent_coef=0.01, policy_kwargs=policy_kwargs)
     elif args.model == 'dqn':
-        model = DQN('CnnPolicy', env=vec_env, verbose=1, policy_kwargs=policy_kwargs)
+        model = DQN('CnnPolicy', env=vec_env, verbose=1, learning_rate=0.0003, policy_kwargs=policy_kwargs)
+    elif args.model == 'a2c':
+        model = A2C('CnnPolicy', env=vec_env, verbose=1, vf_coef=1, ent_coef=0.01, policy_kwargs=policy_kwargs)
+    else:
+        raise ValueError(f"model {args.model} is invalid")
     
     if args.checkpoint:
         model.learn(total_timesteps=args.num_cpu * 4096 * args.total_grad_updates, progress_bar=True, callback=checkpoint_callback)
